@@ -79,4 +79,36 @@ func TestTop10(t *testing.T) {
 			require.Equal(t, expected, Top10(text))
 		}
 	})
+	t.Run("text with repetitive words", func(t *testing.T) {
+		input := `algorithm algorithm algorithm algorithm algorithm
+              complexity complexity complexity complexity
+              data data data data data`
+		expected := []string{"algorithm", "data", "complexity"}
+		require.Equal(t, expected, Top10(input))
+	})
+	t.Run("text with punctuation", func(t *testing.T) {
+		input := `In the analysis of algorithms, there are three basic concerns: time, space, 
+              and simplicity. The analysis of time complexity is often crucial, 
+              while space complexity is also significant. However, simplicity should 
+              not be overlooked.`
+		expected := []string{
+			"analysis",    // 2
+			"complexity",  // 2
+			"is",          // 2
+			"of",          // 2
+			"However,",    // 1
+			"In",          // 1
+			"The",         // 1
+			"algorithms,", // 1
+			"also",        // 1
+			"and",         // 1
+		}
+		require.Equal(t, expected, Top10(input))
+	})
+
+	t.Run("numbers as words", func(t *testing.T) {
+		input := "1 2 3 4 5 6 7 8 9 1 2 3 4 5"
+		expected := []string{"1", "2", "3", "4", "5", "6", "7", "8", "9"}
+		require.Equal(t, expected, Top10(input))
+	})
 }
