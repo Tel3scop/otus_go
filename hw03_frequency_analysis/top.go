@@ -36,18 +36,16 @@ func rankWords(wordCounts map[string]int) []wordRank {
 
 func sortWords(wordsRank []wordRank) {
 	sort.Slice(wordsRank, func(i, j int) bool {
-		if wordsRank[i].Count > wordsRank[j].Count {
-			return true
+		if wordsRank[i].Count == wordsRank[j].Count {
+			return wordsRank[i].Value < wordsRank[j].Value
 		}
-		if wordsRank[i].Count < wordsRank[j].Count {
-			return false
-		}
-		return wordsRank[i].Value < wordsRank[j].Value
+		return wordsRank[i].Count > wordsRank[j].Count
 	})
 }
 
 func getTopWords(wordsRank []wordRank, top int) []string {
 	result := make([]string, 0, top)
+
 	for i := 0; i < len(wordsRank) && i < top; i++ {
 		result = append(result, wordsRank[i].Value)
 	}
