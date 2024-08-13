@@ -2,6 +2,9 @@ package main
 
 import (
 	"flag"
+	"fmt"
+	"os"
+	"strings"
 )
 
 var (
@@ -18,5 +21,16 @@ func init() {
 
 func main() {
 	flag.Parse()
-	// Place your code here.
+
+	if err := Copy(from, to, offset, limit); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
+	}
+}
+
+func printProgressBar(current, total int64) {
+	const barWidth = 50
+	percent := float64(current) / float64(total)
+	bar := int(percent * barWidth)
+	fmt.Printf("\r[%s%s] %3.2f%%", strings.Repeat("=", bar), strings.Repeat(" ", barWidth-bar), percent*100)
 }
