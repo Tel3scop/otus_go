@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"net"
 	"os"
 	"os/signal"
@@ -12,8 +13,7 @@ import (
 
 func main() {
 	if len(os.Args) < 3 {
-		fmt.Println("Usage: go-telnet [--timeout=duration] host port")
-		os.Exit(1)
+		log.Fatal("Usage: go-telnet [--timeout=duration] host port")
 	}
 
 	timeout := 10 * time.Second
@@ -26,8 +26,7 @@ func main() {
 				var err error
 				timeout, err = time.ParseDuration(os.Args[i+1])
 				if err != nil {
-					fmt.Println("Invalid timeout format:", err)
-					os.Exit(1)
+					log.Fatalf("Invalid timeout format: %v", err)
 				}
 			}
 		}
@@ -41,8 +40,9 @@ func main() {
 
 	err := client.Connect()
 	if err != nil {
-		fmt.Println("Connection error:", err)
-		os.Exit(1)
+		cancel()
+		//nolint:gocritic
+		log.Fatalf("Connection error: %v", err)
 	}
 	defer client.Close()
 
