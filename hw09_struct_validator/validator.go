@@ -17,9 +17,9 @@ type ValidationError struct {
 type ValidationErrors []ValidationError
 
 func (v ValidationErrors) Error() string {
-	var errs []string
-	for _, ve := range v {
-		errs = append(errs, fmt.Sprintf("%s: %s", ve.Field, ve.Err.Error()))
+	errs := make([]string, len(v))
+	for i, ve := range v {
+		errs[i] = fmt.Sprintf("%s: %s", ve.Field, ve.Err.Error())
 	}
 	return strings.Join(errs, "; ")
 }
@@ -56,12 +56,12 @@ func Validate(v interface{}) error {
 	return nil
 }
 
-func validateString(fieldName, fieldValue, validatorName, validatorArg string) error {
+func validateString(_, fieldValue, validatorName, validatorArg string) error {
 	switch validatorName {
 	case "len":
 		length, err := strconv.Atoi(validatorArg)
 		if err != nil {
-			return fmt.Errorf("invalid length: %s", validatorArg)
+			return fmt.Errorf("%w: %s", errInvalidLength, validatorArg)
 		}
 		if len(fieldValue) != length {
 			return fmt.Errorf("length must be %d", length)
@@ -69,7 +69,7 @@ func validateString(fieldName, fieldValue, validatorName, validatorArg string) e
 	case "minLen":
 		minLength, err := strconv.Atoi(validatorArg)
 		if err != nil {
-			return fmt.Errorf("invalid min length: %s", validatorArg)
+			return fmt.Errorf("%w: %s", errInvalidMinLen, validatorArg)
 		}
 		if len(fieldValue) < minLength {
 			return fmt.Errorf("minimum length is %d", minLength)
@@ -77,7 +77,7 @@ func validateString(fieldName, fieldValue, validatorName, validatorArg string) e
 	case "regexp":
 		re, err := regexp.Compile(validatorArg)
 		if err != nil {
-			return fmt.Errorf("invalid regexp: %s", validatorArg)
+			return fmt.Errorf("%w: %s", errInvalidRegexp, validatorArg)
 		}
 		if !re.MatchString(fieldValue) {
 			return fmt.Errorf("must match regexp %s", validatorArg)
@@ -91,7 +91,39 @@ func validateString(fieldName, fieldValue, validatorName, validatorArg string) e
 		}
 		return fmt.Errorf("must be one of %s", validatorArg)
 	default:
-		return fmt.Errorf("unknown validator: %s", validatorName)
+		return fmt.Errorf("%w: %s", errUnknownValidator, validatorName)
+	}
+	return nil
+}
+
+func validateInt(_ string, fieldValue int, validatorName, validatorArg string) error {
+	switch validatorName {
+	case "min":
+		minValue, err := strconv.Atoi(validatorArg)
+		if err != nil {
+			return fmt.Errorf("%w: %s", errInvalidMinValue, validatorArg)
+		}
+		if fieldValue < minValue {
+			return fmt.Errorf("must be at least %d", minValue)
+		}
+	case "max":
+		maxValue, err := strconv.Atoi(validatorArg)
+		if err != nil {
+			return fmt.Errorf("%w: %s", errInvalidMaxValue, validatorArg)
+		}
+		if fieldValue > maxValue {
+			return fmt.Errorf("must be at most %d", maxValue)
+		}
+	case "in":
+		allowedValues := strings.Split(validatorArg, ",")
+		for _, val := range allowedValues {
+			if intVal, err := strconv.Atoi(val); err == nil && fieldValue == intVal {
+				return nil
+			}
+		}
+		return fmt.Errorf("must be one of %s", validatorArg)
+	default:
+		return fmt.Errorf("%w: %s", errUnknownValidator, validatorName)
 	}
 	return nil
 }
@@ -108,59 +140,42 @@ func validateField(fieldName string, fieldValue reflect.Value, validator string)
 	switch fieldValue.Kind() {
 	case reflect.String:
 		return validateString(fieldName, fieldValue.String(), validatorName, validatorArg)
-	case reflect.Int:
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		return validateInt(fieldName, int(fieldValue.Int()), validatorName, validatorArg)
 	case reflect.Slice:
-		if fieldValue.Type().Elem().Kind() == reflect.String {
-			for i := 0; i < fieldValue.Len(); i++ {
-				if err := validateString(fieldName, fieldValue.Index(i).String(), validatorName, validatorArg); err != nil {
-					return err
-				}
-			}
-		} else if fieldValue.Type().Elem().Kind() == reflect.Int {
-			for i := 0; i < fieldValue.Len(); i++ {
-				if err := validateInt(fieldName, int(fieldValue.Index(i).Int()), validatorName, validatorArg); err != nil {
-					return err
-				}
-			}
-		} else if fieldValue.Type().Elem().Kind() == reflect.Uint8 {
+		if fieldValue.Type().Elem().Kind() == reflect.Uint8 {
 			return validateString(fieldName, string(fieldValue.Bytes()), validatorName, validatorArg)
 		}
+		return validateSlice(fieldName, fieldValue, validatorName, validatorArg)
+	case reflect.Invalid, reflect.Bool, reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
+		reflect.Uintptr, reflect.Float32, reflect.Float64, reflect.Complex64, reflect.Complex128, reflect.Array,
+		reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Pointer, reflect.Struct, reflect.UnsafePointer:
+		return fmt.Errorf("%w: %s", errUnsupportedType, fieldValue.Kind())
 	default:
-		return fmt.Errorf("unsupported field type: %s", fieldValue.Kind())
+		return fmt.Errorf("%w: %s", errUnsupportedType, fieldValue.Kind())
 	}
-
-	return nil
 }
 
-func validateInt(fieldName string, fieldValue int, validatorName, validatorArg string) error {
-	switch validatorName {
-	case "min":
-		min, err := strconv.Atoi(validatorArg)
-		if err != nil {
-			return fmt.Errorf("invalid min value: %s", validatorArg)
-		}
-		if fieldValue < min {
-			return fmt.Errorf("must be at least %d", min)
-		}
-	case "max":
-		max, err := strconv.Atoi(validatorArg)
-		if err != nil {
-			return fmt.Errorf("invalid max value: %s", validatorArg)
-		}
-		if fieldValue > max {
-			return fmt.Errorf("must be at most %d", max)
-		}
-	case "in":
-		allowedValues := strings.Split(validatorArg, ",")
-		for _, val := range allowedValues {
-			if intVal, err := strconv.Atoi(val); err == nil && fieldValue == intVal {
-				return nil
+func validateSlice(fieldName string, fieldValue reflect.Value, validatorName, validatorArg string) error {
+	for i := 0; i < fieldValue.Len(); i++ {
+		elem := fieldValue.Index(i)
+		switch elem.Kind() {
+		case reflect.String:
+			if err := validateString(fieldName, elem.String(), validatorName, validatorArg); err != nil {
+				return err
 			}
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+			if err := validateInt(fieldName, int(elem.Int()), validatorName, validatorArg); err != nil {
+				return err
+			}
+		case reflect.Invalid, reflect.Bool, reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
+			reflect.Uintptr, reflect.Float32, reflect.Float64, reflect.Complex64, reflect.Complex128, reflect.Array,
+			reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Pointer, reflect.Slice, reflect.Struct,
+			reflect.UnsafePointer:
+			return fmt.Errorf("unsupported element type in slice: %s", elem.Kind())
+		default:
+			return fmt.Errorf("unknown element type in slice: %s", elem.Kind())
 		}
-		return fmt.Errorf("must be one of %s", validatorArg)
-	default:
-		return fmt.Errorf("unknown validator: %s", validatorName)
 	}
 	return nil
 }

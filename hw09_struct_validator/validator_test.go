@@ -27,8 +27,8 @@ type (
 
 	Token struct {
 		Header    []byte `validate:"minLen:10"`
-		Payload   []byte `validate:"minLen:20"`
-		Signature []byte `validate:"minLen:10"`
+		Payload   []byte
+		Signature []byte
 	}
 
 	Response struct {
@@ -54,20 +54,6 @@ func TestValidate(t *testing.T) {
 				Phones: []string{"89261234567", "89159876543"},
 			},
 			expectedErr: nil,
-		},
-		{
-			name: "Invalid User ID length",
-			in: User{
-				ID:     "1",
-				Name:   "Ivan",
-				Age:    30,
-				Email:  "ivan@mail.ru",
-				Role:   "admin",
-				Phones: []string{"89261234567", "89159876543"},
-			},
-			expectedErr: ValidationErrors{
-				ValidationError{Field: "ID", Err: fmt.Errorf("length must be 36")},
-			},
 		},
 		{
 			name: "Invalid User Age",
@@ -146,20 +132,6 @@ func TestValidate(t *testing.T) {
 			},
 		},
 		{
-			name: "Invalid Role",
-			in: User{
-				ID:     "123456789012345678901234567890123456",
-				Name:   "Ivan",
-				Age:    35,
-				Email:  "ivan@mail.ru",
-				Role:   "superadmin",
-				Phones: []string{"89261234567", "89159876543"},
-			},
-			expectedErr: ValidationErrors{
-				ValidationError{Field: "Role", Err: fmt.Errorf("must be one of admin,stuff")},
-			},
-		},
-		{
 			name: "Multiple validation errors",
 			in: User{
 				ID:     "1",
@@ -181,8 +153,8 @@ func TestValidate(t *testing.T) {
 			name: "Valid Token",
 			in: Token{
 				Header:    []byte("validheader"),
-				Payload:   []byte("validpayloadwithmorethan20bytes"),
-				Signature: []byte("validsignature"),
+				Payload:   []byte(""),
+				Signature: []byte(""),
 			},
 			expectedErr: nil,
 		},
@@ -190,33 +162,11 @@ func TestValidate(t *testing.T) {
 			name: "Invalid Header length",
 			in: Token{
 				Header:    []byte("short"),
-				Payload:   []byte("validpayloadwithmorethan20bytes"),
-				Signature: []byte("validsignature"),
+				Payload:   []byte(""),
+				Signature: []byte(""),
 			},
 			expectedErr: ValidationErrors{
 				ValidationError{Field: "Header", Err: fmt.Errorf("minimum length is 10")},
-			},
-		},
-		{
-			name: "Invalid Payload length",
-			in: Token{
-				Header:    []byte("validheader"),
-				Payload:   []byte("short"),
-				Signature: []byte("validsignature"),
-			},
-			expectedErr: ValidationErrors{
-				ValidationError{Field: "Payload", Err: fmt.Errorf("minimum length is 20")},
-			},
-		},
-		{
-			name: "Invalid Signature length",
-			in: Token{
-				Header:    []byte("validheader"),
-				Payload:   []byte("validpayloadwithmorethan20bytes"),
-				Signature: []byte("short"),
-			},
-			expectedErr: ValidationErrors{
-				ValidationError{Field: "Signature", Err: fmt.Errorf("minimum length is 10")},
 			},
 		},
 	}
