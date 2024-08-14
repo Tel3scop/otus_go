@@ -51,7 +51,7 @@ func main() {
 		for {
 			err := client.Send()
 			if err != nil {
-				fmt.Println("Send error:", err)
+				fmt.Fprintln(os.Stderr, "Send error:", err)
 				close(done)
 				return
 			}
@@ -62,7 +62,7 @@ func main() {
 		for {
 			err := client.Receive()
 			if err != nil {
-				fmt.Println("Receive error:", err)
+				fmt.Fprintln(os.Stderr, "Receive error:", err)
 				close(done)
 				return
 			}
@@ -74,10 +74,11 @@ func main() {
 
 	select {
 	case <-sigCh:
-		fmt.Println("Terminated by signal")
+		fmt.Fprintln(os.Stderr, "Terminated by signal")
+		cancel()
 	case <-done:
-		fmt.Println("Connection closed")
+		fmt.Fprintln(os.Stderr, "Connection closed")
 	case <-ctx.Done():
-		fmt.Println("Context timeout or canceled")
+		fmt.Fprintln(os.Stderr, "Context timeout or canceled")
 	}
 }

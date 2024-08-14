@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net"
+	"os"
 	"time"
 )
 
@@ -40,12 +42,15 @@ func (tc *SimpleTelnetClient) Connect() error {
 	if err != nil {
 		return err
 	}
+	fmt.Fprintf(os.Stderr, "...Connected to %s\n", tc.address)
 	return nil
 }
 
 func (tc *SimpleTelnetClient) Close() error {
 	if tc.conn != nil {
-		return tc.conn.Close()
+		err := tc.conn.Close()
+		fmt.Fprintln(os.Stderr, "...Connection closed")
+		return err
 	}
 	return nil
 }
@@ -55,6 +60,10 @@ func (tc *SimpleTelnetClient) Send() error {
 		return fmt.Errorf("not connected")
 	}
 	_, err := io.Copy(tc.conn, tc.in)
+	if errors.Is(err, io.EOF) {
+		fmt.Fprintln(os.Stderr, "...EOF")
+		return err
+	}
 	return err
 }
 
@@ -63,5 +72,9 @@ func (tc *SimpleTelnetClient) Receive() error {
 		return fmt.Errorf("not connected")
 	}
 	_, err := io.Copy(tc.out, tc.conn)
+	var netErr net.Error
+	if errors.As(err, &netErr) && netErr.Timeout() {
+		fmt.Fprintln(os.Stderr, "...Connection timed out")
+	}
 	return err
 }
