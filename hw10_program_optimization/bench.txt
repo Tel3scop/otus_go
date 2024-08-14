@@ -1,0 +1,18 @@
+было:
+goos: darwin
+goarch: amd64
+pkg: github.com/Tel3scop/otus_go/hw10_program_optimization
+cpu: Intel(R) Core(TM) i7-1068NG7 CPU @ 2.30GHz
+BenchmarkGetDomainStat-8               3         404549155 ns/op        316760178 B/op   2844551 allocs/op
+PASS
+ok      github.com/Tel3scop/otus_go/hw10_program_optimization   3.888s
+
+
+стало:
+goos: darwin
+goarch: amd64
+pkg: github.com/Tel3scop/otus_go/hw10_program_optimization
+cpu: Intel(R) Core(TM) i7-1068NG7 CPU @ 2.30GHz
+BenchmarkGetDomainStat-8               9         112374304 ns/op        11263223 B/op     622235 allocs/op
+PASS
+ok      github.com/Tel3scop/otus_go/hw10_program_optimization   3.618s

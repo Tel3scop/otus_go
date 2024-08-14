@@ -1,3 +1,4 @@
+//go:build !bench
 // +build !bench
 
 package hw10programoptimization
@@ -36,4 +37,64 @@ func TestGetDomainStat(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, DomainStat{}, result)
 	})
+}
+
+func TestGetDomainStatAdditional(t *testing.T) {
+	testCases := []struct {
+		name      string
+		data      string
+		domain    string
+		expected  DomainStat
+		expectErr bool
+	}{
+		{
+			name:      "single user with matching domain",
+			data:      `{"Id":1,"Name":"John Doe","Email":"john.doe@example.com"}`,
+			domain:    "com",
+			expected:  DomainStat{"example.com": 1},
+			expectErr: false,
+		},
+		{
+			name: "multiple users with matching domain",
+			data: `{"Id":1,"Name":"John Doe","Email":"john.doe@example.com"}
+{"Id":2,"Name":"Jane Doe","Email":"jane.doe@example.com"}`,
+			domain:    "com",
+			expected:  DomainStat{"example.com": 2},
+			expectErr: false,
+		},
+		{
+			name:      "no matching domain",
+			data:      `{"Id":1,"Name":"John Doe","Email":"john.doe@example.org"}`,
+			domain:    "com",
+			expected:  DomainStat{},
+			expectErr: false,
+		},
+		{
+			name:      "invalid json",
+			data:      `{"Id":1,"Name":"John Doe","Email":"john.doe@example.com"`,
+			domain:    "com",
+			expected:  nil,
+			expectErr: true,
+		},
+		{
+			name:      "empty data",
+			data:      ``,
+			domain:    "com",
+			expected:  DomainStat{},
+			expectErr: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			r := bytes.NewBufferString(tc.data)
+			result, err := GetDomainStat(r, tc.domain)
+			if tc.expectErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.expected, result)
+			}
+		})
+	}
 }

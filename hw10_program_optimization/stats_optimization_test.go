@@ -6,8 +6,9 @@ package hw10programoptimization
 import (
 	"archive/zip"
 	"testing"
+	//nolint
 	"time"
-
+	//nolint
 	"github.com/stretchr/testify/require"
 )
 
