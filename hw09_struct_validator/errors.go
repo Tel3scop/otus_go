@@ -1,13 +1,13 @@
 package hw09structvalidator
 
-import "fmt"
+import "errors"
 
 var (
-	errInvalidLength    = fmt.Errorf("invalid length")
-	errInvalidMinLen    = fmt.Errorf("invalid min length")
-	errInvalidRegexp    = fmt.Errorf("invalid regexp")
-	errInvalidMinValue  = fmt.Errorf("invalid min value")
-	errInvalidMaxValue  = fmt.Errorf("invalid max value")
-	errUnsupportedType  = fmt.Errorf("unsupported field type")
-	errUnknownValidator = fmt.Errorf("unknown validator")
+	errInvalidLength    = errors.New("invalid length")
+	errInvalidMinLen    = errors.New("invalid min length")
+	errInvalidRegexp    = errors.New("invalid regexp")
+	errInvalidMinValue  = errors.New("invalid min value")
+	errInvalidMaxValue  = errors.New("invalid max value")
+	errUnsupportedType  = errors.New("unsupported field type")
+	errUnknownValidator = errors.New("unknown validator")
 )
