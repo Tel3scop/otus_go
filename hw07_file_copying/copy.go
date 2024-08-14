@@ -47,7 +47,6 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 	buffer := make([]byte, 32*1024)
 	copied := int64(0)
 	var mu sync.Mutex
-
 	go func() {
 		for {
 			time.Sleep(100 * time.Millisecond)
