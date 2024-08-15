@@ -38,6 +38,9 @@ func (tc *SimpleTelnetClient) Connect() error {
 	var d net.Dialer
 	var err error
 	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(ctx, tc.timeout)
+	defer cancel()
+
 	tc.conn, err = d.DialContext(ctx, "tcp", tc.address)
 	if err != nil {
 		return err
