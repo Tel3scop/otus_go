@@ -35,7 +35,5 @@ func printProgressBar(current, total int64) {
 	percent := float64(current) / float64(total)
 	bar := int(percent * barWidth)
 
-	mu.Lock()
 	fmt.Printf("\r[%s%s] %3.2f%%", strings.Repeat("=", bar), strings.Repeat(" ", barWidth-bar), percent*100)
-	mu.Unlock()
 }

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"sync"
 	"time"
 )
 
@@ -46,10 +45,11 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 	reader := io.LimitReader(srcFile, limit)
 	buffer := make([]byte, 32*1024)
 	copied := int64(0)
-	var mu sync.Mutex
+
 	go func() {
 		for {
 			time.Sleep(100 * time.Millisecond)
+
 			mu.Lock()
 			printProgressBar(copied, limit)
 			if copied >= limit {
@@ -64,7 +64,6 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 	if err != nil {
 		return err
 	}
-
 	mu.Lock()
 	printProgressBar(limit, limit)
 	mu.Unlock()
@@ -133,7 +132,9 @@ func copyData(reader io.Reader, dstFile *os.File, buffer []byte, copied *int64) 
 			if writeErr != nil {
 				return writeErr
 			}
+			mu.Lock()
 			*copied += int64(n)
+			mu.Unlock()
 		}
 		if err == io.EOF {
 			break
