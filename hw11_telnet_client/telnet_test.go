@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	//nolint
 	"github.com/stretchr/testify/require"
 )
 
