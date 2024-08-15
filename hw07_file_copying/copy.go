@@ -52,10 +52,11 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 			time.Sleep(100 * time.Millisecond)
 			mu.Lock()
 			printProgressBar(copied, limit)
-			mu.Unlock()
 			if copied >= limit {
+				mu.Unlock()
 				break
 			}
+			mu.Unlock()
 		}
 	}()
 
