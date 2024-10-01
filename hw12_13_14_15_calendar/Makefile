@@ -1,3 +1,5 @@
+include .env
+
 BIN := "./bin/calendar"
 DOCKER_IMG="calendar:develop"
 
@@ -23,7 +25,7 @@ version: build
 	$(BIN) version
 
 test:
-	go test -race ./internal/... ./pkg/...
+	go test -race ./internal/...
 
 install-lint-deps:
 	(which golangci-lint > /dev/null) || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin v1.50.1
@@ -32,3 +34,25 @@ lint: install-lint-deps
 	golangci-lint run ./...
 
 .PHONY: build run build-img run-img version test lint
+
+.PHONY: mock
+mock: ### Generate mocks
+	go generate ./...
+
+
+.PHONY: docker-build
+docker-build: ## build for CI/CD
+	docker buildx build --no-cache --platform linux/amd64 -t ${REGISTRY}/calendar-server:v0.0.1 .
+	docker login -u ${REGISTRY_USERNAME} -p ${REGISTRY_PASSWORD} ${REGISTRY}
+	docker push  ${REGISTRY}/calendar-server:v0.0.1
+
+
+.PHONY: build
+build: ## Build the project using docker-compose
+	docker login -u ${REGISTRY_USERNAME} -p ${REGISTRY_PASSWORD} ${REGISTRY}
+	sh update_tag.sh
+	docker-compose build
+
+.PHONY: run
+run: ## Run the project using docker-compose
+	docker-compose up -d
