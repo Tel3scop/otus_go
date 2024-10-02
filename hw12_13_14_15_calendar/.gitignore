@@ -1,2 +1,14 @@
+.idea
+.run
+
 logs/
+*.log
+
 bin/
+
+vendor.protogen
+/vendor/
+
+.env
+migration.env
+
