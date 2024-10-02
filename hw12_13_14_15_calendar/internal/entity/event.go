@@ -2,6 +2,14 @@ package entity
 
 import "time"
 
+type PeriodType string
+
+const (
+	PeriodDay   = PeriodType("day")
+	PeriodWeek  = PeriodType("week")
+	PeriodMonth = PeriodType("month")
+)
+
 // Event структура события.
 type Event struct {
 	ID           string

@@ -9,8 +9,13 @@ import (
 	"go.uber.org/zap"
 )
 
-func (s *serv) List(ctx context.Context, date time.Time, period string) ([]entity.Event, error) {
-	logger.Info("Getting event list...", zap.String("date", date.String()), zap.String("period", period))
+func (s *serv) List(ctx context.Context, date time.Time, period entity.PeriodType) ([]entity.Event, error) {
+	logger.Info(
+		"Getting event list...",
+		zap.String("date", date.String()),
+		zap.String("period", string(period)),
+	)
+
 	var list []entity.Event
 	err := s.txManager.ReadCommitted(ctx, func(ctx context.Context) error {
 		var errTx error
@@ -29,7 +34,7 @@ func (s *serv) List(ctx context.Context, date time.Time, period string) ([]entit
 		"Event list got",
 		zap.Int("count", len(list)),
 		zap.String("date", date.String()),
-		zap.String("period", period),
+		zap.String("period", string(period)),
 	)
 
 	return list, nil

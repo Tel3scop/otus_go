@@ -1,17 +1,25 @@
 debugMode: false
 environment: "local"
-database: "memory111"
+database: "postgres"
 postgres:
   host: "localhost"
   port: "5432"
-  user: "root"
+  user: "user"
   password: "password"
-  db: "postgres"
+  db: "calendar"
   sslMode: "disable"
   maxOpenConnections: 100
 http:
   host: "localhost"
+  port: "8080"
+swagger:
+  host: "localhost"
   port: "8081"
+  timeout: 5
+grpc:
+  host: "localhost"
+  port: "10051"
+  protocol: "tcp"
 log:
   fileName: "logs/app.log"
   level: "info"

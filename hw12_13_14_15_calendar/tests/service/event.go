@@ -71,7 +71,7 @@ func (mr *MockEventServiceMockRecorder) Delete(ctx, eventID any) *gomock.Call {
 }
 
 // List mocks base method.
-func (m *MockEventService) List(ctx context.Context, date time.Time, period string) ([]entity.Event, error) {
+func (m *MockEventService) List(ctx context.Context, date time.Time, period entity.PeriodType) ([]entity.Event, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", ctx, date, period)
 	ret0, _ := ret[0].([]entity.Event)

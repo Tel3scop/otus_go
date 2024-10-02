@@ -19,5 +19,5 @@ type EventStorage interface {
 	Create(ctx context.Context, event entity.Event) (string, error)
 	Update(ctx context.Context, eventID string, event entity.Event) error
 	Delete(ctx context.Context, eventID string) error
-	List(ctx context.Context, date time.Time, period string) ([]entity.Event, error)
+	List(ctx context.Context, date time.Time, period entity.PeriodType) ([]entity.Event, error)
 }

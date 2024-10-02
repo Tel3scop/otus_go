@@ -119,11 +119,11 @@ func (r *repo) Delete(ctx context.Context, eventID string) error {
 }
 
 // List список событий на определенный период.
-func (r *repo) List(ctx context.Context, date time.Time, period string) ([]entity.Event, error) {
+func (r *repo) List(ctx context.Context, date time.Time, period entity.PeriodType) ([]entity.Event, error) {
 	var builder sq.SelectBuilder
 
 	switch period {
-	case "day":
+	case entity.PeriodDay:
 		builder = sq.Select(
 			columnID,
 			columnTitle,
@@ -136,7 +136,7 @@ func (r *repo) List(ctx context.Context, date time.Time, period string) ([]entit
 			From(tableName).
 			Where(sq.Expr("DATE_TRUNC('day', "+columnDateTime+") = ?", date)).
 			PlaceholderFormat(sq.Dollar)
-	case "week":
+	case entity.PeriodWeek:
 		startOfWeek := date.AddDate(0, 0, -int(date.Weekday()))
 		endOfWeek := startOfWeek.AddDate(0, 0, 7)
 		builder = sq.Select(
@@ -151,7 +151,7 @@ func (r *repo) List(ctx context.Context, date time.Time, period string) ([]entit
 			From(tableName).
 			Where(sq.Expr(columnDateTime+" >= ? AND "+columnDateTime+" < ?", startOfWeek, endOfWeek)).
 			PlaceholderFormat(sq.Dollar)
-	case "month":
+	case entity.PeriodMonth:
 		startOfMonth := time.Date(date.Year(), date.Month(), 1, 0, 0, 0, 0, date.Location())
 		endOfMonth := startOfMonth.AddDate(0, 1, 0)
 		builder = sq.Select(

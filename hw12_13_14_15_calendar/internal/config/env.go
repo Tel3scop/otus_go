@@ -28,6 +28,8 @@ type Config struct {
 	Database    DataBaseType `yaml:"database" envDefault:"memory"`
 	Postgres    Postgres     `yaml:"postgres"`
 	HTTP        HTTP         `yaml:"http"`
+	Swagger     Swagger      `yaml:"swagger"`
+	GRPC        GRPC         `yaml:"grpc"`
 	Log         Log          `yaml:"log"`
 }
 
@@ -55,6 +57,22 @@ type HTTP struct {
 	Address string
 }
 
+// GRPC конфиг подключения к grpc.
+type GRPC struct {
+	Host     string `yaml:"host"`
+	Port     string `yaml:"port"`
+	Protocol string `yaml:"protocol"`
+	Address  string
+}
+
+// Swagger конфиг.
+type Swagger struct {
+	Host    string `yaml:"host" envDefault:"localhost"`
+	Port    string `yaml:"port" envDefault:"8081"`
+	Address string
+	Timeout int `yaml:"timeout" envDefault:"5"`
+}
+
 // Log конфиг для логов.
 type Log struct {
 	FileName   string `yaml:"fileName" envDefault:"logs/app.log"`
@@ -78,7 +96,9 @@ func New(configFile string) (*Config, error) {
 	if err != nil {
 		log.Fatalf("failed to unmarshal config: %s", err.Error())
 	}
+	cfg.GRPC.Address = net.JoinHostPort(cfg.GRPC.Host, cfg.GRPC.Port)
 	cfg.HTTP.Address = net.JoinHostPort(cfg.HTTP.Host, cfg.HTTP.Port)
+	cfg.Swagger.Address = net.JoinHostPort(cfg.Swagger.Host, cfg.Swagger.Port)
 	buildDSN(&cfg.Postgres)
 
 	return cfg, nil
