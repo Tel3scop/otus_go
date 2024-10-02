@@ -32,6 +32,8 @@ issues:
         - errcheck
         - dupl
         - gosec
+        - revive
+        - unparam
 linters:
   disable-all: true
   enable:

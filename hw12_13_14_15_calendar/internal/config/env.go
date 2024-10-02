@@ -48,7 +48,7 @@ type Postgres struct {
 	MaxOpenConnections int `yaml:"maxOpenConnections" envDefault:"100"`
 }
 
-// HTTP конфиг подключения к grpc
+// HTTP конфиг подключения к серверу.
 type HTTP struct {
 	Host    string `yaml:"host" envDefault:"localhost"`
 	Port    string `env:"port" envDefault:"8080"`

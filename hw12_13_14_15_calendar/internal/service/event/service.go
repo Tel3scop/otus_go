@@ -11,7 +11,7 @@ type serv struct {
 	txManager    db.TxManager
 }
 
-// NewService функция возвращает новый сервис событий
+// NewService функция возвращает новый сервис событий.
 func NewService(
 	eventStorage storage.EventStorage,
 	txManager db.TxManager,
