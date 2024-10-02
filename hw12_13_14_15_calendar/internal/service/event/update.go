@@ -12,11 +12,7 @@ func (s *serv) Update(ctx context.Context, dto entity.Event) error {
 	logger.Info("Updating event...", zap.String("uuid", dto.ID), zap.String("title", dto.Title))
 
 	err := s.txManager.ReadCommitted(ctx, func(ctx context.Context) error {
-		if errTx := s.eventStorage.Update(ctx, dto.ID, dto); errTx != nil {
-			return errTx
-		}
-
-		return nil
+		return s.eventStorage.Update(ctx, dto.ID, dto)
 	})
 	if err != nil {
 		return err

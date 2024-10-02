@@ -23,6 +23,8 @@ linters-settings:
           - github.com/pkg/errors
           - github.com/grpc-ecosystem
           - github.com/spf13/cobra
+          - github.com/google/uuid
+          - github.com/rs/cors
 
 issues:
   exclude-rules:
