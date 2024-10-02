@@ -1,0 +1,48 @@
+name: calendar
+
+services:
+  app:
+    image: cr.selcloud.ru/registry/calendar-server:${TAG}
+    container_name: app
+    ports:
+      - "${HTTP_PORT}:${HTTP_PORT}"
+    depends_on:
+      - db
+    networks:
+      - calendar-network
+
+  app-migrator:
+    container_name: app-migrator
+    build:
+      dockerfile: migration.Dockerfile
+    env_file:
+      - "migration.env"
+    depends_on:
+      - db
+    restart: on-failure
+    networks:
+      - calendar-network
+
+  db:
+    image: postgres:15-alpine3.17
+    container_name: db
+    env_file:
+      - ".env"
+    ports:
+      - "5432:${POSTGRES_PORT}"
+    volumes:
+      - postgres_volume:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - calendar-network
+
+volumes:
+  postgres_volume:
+
+networks:
+  calendar-network:
+    driver: bridge

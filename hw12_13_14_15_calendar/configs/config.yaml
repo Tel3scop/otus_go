@@ -1,0 +1,22 @@
+debugMode: false
+environment: "local"
+database: "memory111"
+postgres:
+  host: "localhost"
+  port: "5432"
+  user: "root"
+  password: "password"
+  db: "postgres"
+  sslMode: "disable"
+  maxOpenConnections: 100
+http:
+  host: "localhost"
+  port: "8081"
+log:
+  fileName: "logs/app.log"
+  level: "info"
+  maxSize: 5
+  maxBackups: 3
+  maxAge: 10
+  compress: false
+  stdOut: true
