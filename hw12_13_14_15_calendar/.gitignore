@@ -1,12 +1,12 @@
-.idea
-.run
+.idea/
+.run/
 
 logs/
 *.log
 
 bin/
 
-vendor.protogen
+/vendor.protogen/
 /vendor/
 
 .env
