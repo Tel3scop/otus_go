@@ -1,0 +1,30 @@
+debugMode: false
+environment: "local"
+database: "postgres"
+postgres:
+  host: "localhost"
+  port: "5432"
+  user: "user"
+  password: "password"
+  db: "calendar"
+  sslMode: "disable"
+  maxOpenConnections: 100
+http:
+  host: "localhost"
+  port: "8080"
+swagger:
+  host: "localhost"
+  port: "8081"
+  timeout: 5
+grpc:
+  host: "localhost"
+  port: "10051"
+  protocol: "tcp"
+log:
+  fileName: "logs/app.log"
+  level: "info"
+  maxSize: 5
+  maxBackups: 3
+  maxAge: 10
+  compress: false
+  stdOut: true

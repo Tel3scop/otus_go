@@ -2,6 +2,138 @@ syntax = "proto3";
 
 package event;
 
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+option go_package = "github.com/Tel3scop/otus_go/hw12_13_14_15_calendar/pkg/event_v1;event_v1";
+
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+  info: {
+    title: "Event Management API"
+    version: "1.0.0"
+    contact: {
+      name: "Your Name"
+      email: "your.email@example.com"
+    };
+  };
+
+  host: "localhost:8080",
+  schemes: HTTP,
+  schemes: HTTPS,
+  consumes: "application/json",
+  produces: "application/json",
+};
+
+service EventService {
+  // Создать новое событие
+  rpc CreateEvent (CreateEventRequest) returns (CreateEventResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/events"
+      body: "*"
+    };
+  }
+
+  // Обновить существующее событие
+  rpc UpdateEvent (UpdateEventRequest) returns (UpdateEventResponse) {
+    option (google.api.http) = {
+      put: "/api/v1/events/{event_id}"
+      body: "*"
+    };
+  }
+
+  // Удалить событие по ID
+  rpc DeleteEvent (DeleteEventRequest) returns (DeleteEventResponse) {
+    option (google.api.http) = {
+      delete: "/api/v1/events/{event_id}"
+    };
+  }
+
+  // Получить список событий на определенный день
+  rpc ListEventsForDay (ListEventsForDayRequest) returns (ListEventsForDayResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/events/day/{date}"
+    };
+  }
+
+  // Получить список событий на определенную неделю
+  rpc ListEventsForWeek (ListEventsForWeekRequest) returns (ListEventsForWeekResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/events/week/{start_date}"
+    };
+  }
+
+  // Получить список событий на определенный месяц
+  rpc ListEventsForMonth (ListEventsForMonthRequest) returns (ListEventsForMonthResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/events/month/{start_date}"
+    };
+  }
+}
+
 message Event {
-    // TODO
+  string id = 1; // Уникальный идентификатор события (UUID)
+  string title = 2; // Короткий текст заголовка события
+  google.protobuf.Timestamp date_time = 3; // Дата и время события
+  google.protobuf.Duration duration = 4; // Длительность события
+  string description = 5; // Длинный текст описания события (опционально)
+  string user_id = 6; // ID пользователя, который владеет событием
+  google.protobuf.Duration notification_time = 7; // За сколько времени высылать уведомление (опционально)
+}
+
+message Notification {
+  string event_id = 1; // ID события, для которого отправляется уведомление
+  string event_title = 2; // Заголовок события
+  google.protobuf.Timestamp event_date = 3; // Дата события
+  string user_id = 4; // ID пользователя, которому отправляется уведомление
+}
+
+message CreateEventRequest {
+  Event event = 1; // Событие, которое нужно создать
+}
+
+message CreateEventResponse {
+  string event_id = 1; // ID созданного события
+}
+
+message UpdateEventRequest {
+  string event_id = 1; // ID события, которое нужно обновить
+  Event event = 2; // Обновленные данные события
+}
+
+message UpdateEventResponse {
+  bool success = 1; // Указывает, успешно ли обновление
+}
+
+message DeleteEventRequest {
+  string event_id = 1; // ID события, которое нужно удалить
+}
+
+message DeleteEventResponse {
+  bool success = 1; // Указывает, успешно ли удаление
+}
+
+message ListEventsForDayRequest {
+  google.protobuf.Timestamp date = 1; // Дата, для которой нужно получить список событий
+}
+
+message ListEventsForDayResponse {
+  repeated Event events = 1; // Список событий на указанный день
+}
+
+message ListEventsForWeekRequest {
+  google.protobuf.Timestamp start_date = 1; // Дата начала недели, для которой нужно получить список событий
+}
+
+message ListEventsForWeekResponse {
+  repeated Event events = 1; // Список событий на указанную неделю
+}
+
+message ListEventsForMonthRequest {
+  google.protobuf.Timestamp start_date = 1; // Дата начала месяца, для которого нужно получить список событий
+}
+
+message ListEventsForMonthResponse {
+  repeated Event events = 1; // Список событий на указанный месяц
 }
