@@ -21,3 +21,11 @@ type EventStorage interface {
 	Delete(ctx context.Context, eventID string) error
 	List(ctx context.Context, date time.Time, period entity.PeriodType) ([]entity.Event, error)
 }
+
+// QueueStorage интерфейс для работы с очередями.
+type QueueStorage interface {
+	CreateQueue(ctx context.Context) error
+	Enqueue(ctx context.Context, notification entity.Notification) error
+	Dequeue(ctx context.Context) (*entity.Notification, error)
+	DeleteQueue(ctx context.Context) error
+}

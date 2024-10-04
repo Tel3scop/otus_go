@@ -1,16 +1,18 @@
 name: calendar
 
 services:
-  app:
-    image: cr.selcloud.ru/registry/calendar-server:${TAG}
-    container_name: app
-    ports:
-      - "${HTTP_PORT}:${HTTP_PORT}"
-      - "${GRPC_PORT}:${GRPC_PORT}"
-    depends_on:
-      - db
-    networks:
-      - calendar-network
+#  app:
+#    image: cr.selcloud.ru/registry/calendar-server:${TAG}
+#    container_name: app
+#    env_file:
+#      - ".env"
+#    ports:
+#      - "${HTTP_PORT}:${HTTP_PORT}"
+#      - "${GRPC_PORT}:${GRPC_PORT}"
+#    depends_on:
+#      - db
+#    networks:
+#      - calendar-network
 
   app-migrator:
     container_name: app-migrator
@@ -41,8 +43,25 @@ services:
     networks:
       - calendar-network
 
+  rmq:
+    image: rabbitmq:4.0.2-management
+    container_name: rmq
+    env_file:
+      - ".env"
+    restart: always
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RMQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${RMQ_PWD}
+      - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=-rabbit log_levels [{connection,error},{default,error}] disk_free_limit ${RMQ_DISK_FREE}
+    ports:
+      - "${RMQ_PORT}:${RMQ_PORT}"
+    volumes:
+      - rmq_volume:/var/lib/rabbitmq
+    networks:
+      - calendar-network
 volumes:
   postgres_volume:
+  rmq_volume:
 
 networks:
   calendar-network:

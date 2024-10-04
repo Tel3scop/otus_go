@@ -14,3 +14,11 @@ type EventService interface {
 	Delete(ctx context.Context, eventID string) error
 	List(ctx context.Context, date time.Time, period entity.PeriodType) ([]entity.Event, error)
 }
+
+// QueueService интерфейс сервиса для работы с очередями.
+type QueueService interface {
+	CreateQueue(ctx context.Context) error
+	EnqueueNotification(ctx context.Context, notification entity.Notification) error
+	DequeueNotification(ctx context.Context) (*entity.Notification, error)
+	DeleteQueue(ctx context.Context) error
+}

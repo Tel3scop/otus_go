@@ -2,6 +2,8 @@ package app
 
 import (
 	"context"
+	"github.com/Tel3scop/otus_go/hw12_13_14_15_calendar/internal/client/rmq"
+	"github.com/Tel3scop/otus_go/hw12_13_14_15_calendar/internal/service/queue"
 	"log"
 
 	eventApi "github.com/Tel3scop/otus_go/hw12_13_14_15_calendar/internal/api/event"
@@ -14,15 +16,19 @@ import (
 	"github.com/Tel3scop/otus_go/hw12_13_14_15_calendar/internal/service/event"
 	"github.com/Tel3scop/otus_go/hw12_13_14_15_calendar/internal/storage"
 	memorystorage "github.com/Tel3scop/otus_go/hw12_13_14_15_calendar/internal/storage/memory"
+	rmqstorage "github.com/Tel3scop/otus_go/hw12_13_14_15_calendar/internal/storage/rmq"
 	sqlstorage "github.com/Tel3scop/otus_go/hw12_13_14_15_calendar/internal/storage/sql"
 )
 
 type serviceProvider struct {
 	config          *config.Config
 	eventRepository storage.EventStorage
+	queueRepository storage.QueueStorage
 	eventService    service.EventService
+	queueService    service.QueueService
 	eventImpl       *eventApi.Implementation
 	dbClient        db.Client
+	rmqClient       *rmq.Client
 	txManager       db.TxManager
 }
 
@@ -64,6 +70,25 @@ func (s *serviceProvider) DBClient(ctx context.Context) db.Client {
 	return s.dbClient
 }
 
+func (s *serviceProvider) RMQClient(ctx context.Context) *rmq.Client {
+	if s.rmqClient == nil {
+		cl, err := rmq.NewClient(ctx, s.Config().Postgres.DSN)
+		if err != nil {
+			log.Fatalf("failed to create db client: %v", err)
+		}
+
+		err = cl.DB().Ping(ctx)
+		if err != nil {
+			log.Fatalf("ping error: %s", err.Error())
+		}
+		closer.Add(cl.Close)
+
+		s.dbClient = cl
+	}
+
+	return s.rmqClient
+}
+
 func (s *serviceProvider) TxManager(ctx context.Context) db.TxManager {
 	if s.txManager != nil {
 		return s.txManager
@@ -97,11 +122,31 @@ func (s *serviceProvider) EventRepository(ctx context.Context) storage.EventStor
 	return s.eventRepository
 }
 
+func (s *serviceProvider) QueueStorage(ctx context.Context) storage.QueueStorage {
+	if s.queueRepository != nil {
+		return s.queueRepository
+	}
+
+	s.queueRepository = rmqstorage.NewRepository(s.DBClient(ctx))
+
+	return s.eventRepository
+}
+
 func (s *serviceProvider) EventService(ctx context.Context) service.EventService {
 	if s.eventService == nil {
 		s.eventService = event.NewService(
 			s.EventRepository(ctx),
 			s.TxManager(ctx),
+		)
+	}
+
+	return s.eventService
+}
+func (s *serviceProvider) QueueService(ctx context.Context) service.QueueService {
+	if s.queueService == nil {
+		s.queueService = queue.NewService(
+			s.EventRepository(ctx),
+			s.EventService(ctx),
 		)
 	}
 
