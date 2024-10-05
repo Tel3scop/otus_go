@@ -1,0 +1,376 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Event Management API",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Your Name",
+      "email": "your.email@example.com"
+    }
+  },
+  "tags": [
+    {
+      "name": "EventService"
+    }
+  ],
+  "host": "localhost:8080",
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/v1/events": {
+      "post": {
+        "summary": "Создать новое событие",
+        "operationId": "EventService_CreateEvent",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/eventCreateEventResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/eventCreateEventRequest"
+            }
+          }
+        ],
+        "tags": [
+          "EventService"
+        ]
+      }
+    },
+    "/api/v1/events/day/{date}": {
+      "get": {
+        "summary": "Получить список событий на определенный день",
+        "operationId": "EventService_ListEventsForDay",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/eventListEventsForDayResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "date",
+            "description": "Дата, для которой нужно получить список событий",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "date-time"
+          }
+        ],
+        "tags": [
+          "EventService"
+        ]
+      }
+    },
+    "/api/v1/events/month/{startDate}": {
+      "get": {
+        "summary": "Получить список событий на определенный месяц",
+        "operationId": "EventService_ListEventsForMonth",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/eventListEventsForMonthResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "startDate",
+            "description": "Дата начала месяца, для которого нужно получить список событий",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "date-time"
+          }
+        ],
+        "tags": [
+          "EventService"
+        ]
+      }
+    },
+    "/api/v1/events/week/{startDate}": {
+      "get": {
+        "summary": "Получить список событий на определенную неделю",
+        "operationId": "EventService_ListEventsForWeek",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/eventListEventsForWeekResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "startDate",
+            "description": "Дата начала недели, для которой нужно получить список событий",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "date-time"
+          }
+        ],
+        "tags": [
+          "EventService"
+        ]
+      }
+    },
+    "/api/v1/events/{eventId}": {
+      "delete": {
+        "summary": "Удалить событие по ID",
+        "operationId": "EventService_DeleteEvent",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/eventDeleteEventResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "eventId",
+            "description": "ID события, которое нужно удалить",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "EventService"
+        ]
+      },
+      "put": {
+        "summary": "Обновить существующее событие",
+        "operationId": "EventService_UpdateEvent",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/eventUpdateEventResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "eventId",
+            "description": "ID события, которое нужно обновить",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "event": {
+                  "$ref": "#/definitions/eventEvent",
+                  "title": "Обновленные данные события"
+                }
+              }
+            }
+          }
+        ],
+        "tags": [
+          "EventService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "eventCreateEventRequest": {
+      "type": "object",
+      "properties": {
+        "event": {
+          "$ref": "#/definitions/eventEvent",
+          "title": "Событие, которое нужно создать"
+        }
+      }
+    },
+    "eventCreateEventResponse": {
+      "type": "object",
+      "properties": {
+        "eventId": {
+          "type": "string",
+          "title": "ID созданного события"
+        }
+      }
+    },
+    "eventDeleteEventResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "title": "Указывает, успешно ли удаление"
+        }
+      }
+    },
+    "eventEvent": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "Уникальный идентификатор события (UUID)"
+        },
+        "title": {
+          "type": "string",
+          "title": "Короткий текст заголовка события"
+        },
+        "dateTime": {
+          "type": "string",
+          "format": "date-time",
+          "title": "Дата и время события"
+        },
+        "duration": {
+          "type": "string",
+          "title": "Длительность события"
+        },
+        "description": {
+          "type": "string",
+          "title": "Длинный текст описания события (опционально)"
+        },
+        "userId": {
+          "type": "string",
+          "title": "ID пользователя, который владеет событием"
+        },
+        "notificationTime": {
+          "type": "string",
+          "title": "За сколько времени высылать уведомление (опционально)"
+        }
+      }
+    },
+    "eventListEventsForDayResponse": {
+      "type": "object",
+      "properties": {
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/eventEvent"
+          },
+          "title": "Список событий на указанный день"
+        }
+      }
+    },
+    "eventListEventsForMonthResponse": {
+      "type": "object",
+      "properties": {
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/eventEvent"
+          },
+          "title": "Список событий на указанный месяц"
+        }
+      }
+    },
+    "eventListEventsForWeekResponse": {
+      "type": "object",
+      "properties": {
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/eventEvent"
+          },
+          "title": "Список событий на указанную неделю"
+        }
+      }
+    },
+    "eventUpdateEventResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "title": "Указывает, успешно ли обновление"
+        }
+      }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    }
+  }
+}
