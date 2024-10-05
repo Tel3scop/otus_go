@@ -26,6 +26,8 @@ linters-settings:
           - github.com/google/uuid
           - github.com/rs/cors
           - github.com/rakyll/statik/fs
+          - github.com/rabbitmq/amqp091-go
+          - github.com/go-co-op/gocron/v2
 
 issues:
   exclude-rules:
