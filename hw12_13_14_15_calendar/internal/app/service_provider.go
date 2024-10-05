@@ -2,18 +2,19 @@ package app
 
 import (
 	"context"
-	"github.com/Tel3scop/otus_go/hw12_13_14_15_calendar/internal/client/rmq"
-	"github.com/Tel3scop/otus_go/hw12_13_14_15_calendar/internal/service/queue"
 	"log"
 
 	eventApi "github.com/Tel3scop/otus_go/hw12_13_14_15_calendar/internal/api/event"
 	"github.com/Tel3scop/otus_go/hw12_13_14_15_calendar/internal/client/db"
 	"github.com/Tel3scop/otus_go/hw12_13_14_15_calendar/internal/client/db/pg"
 	"github.com/Tel3scop/otus_go/hw12_13_14_15_calendar/internal/client/db/transaction"
+	"github.com/Tel3scop/otus_go/hw12_13_14_15_calendar/internal/client/rmq"
 	"github.com/Tel3scop/otus_go/hw12_13_14_15_calendar/internal/closer"
 	"github.com/Tel3scop/otus_go/hw12_13_14_15_calendar/internal/config"
 	"github.com/Tel3scop/otus_go/hw12_13_14_15_calendar/internal/service"
 	"github.com/Tel3scop/otus_go/hw12_13_14_15_calendar/internal/service/event"
+	"github.com/Tel3scop/otus_go/hw12_13_14_15_calendar/internal/service/notification"
+	"github.com/Tel3scop/otus_go/hw12_13_14_15_calendar/internal/service/queue"
 	"github.com/Tel3scop/otus_go/hw12_13_14_15_calendar/internal/storage"
 	memorystorage "github.com/Tel3scop/otus_go/hw12_13_14_15_calendar/internal/storage/memory"
 	rmqstorage "github.com/Tel3scop/otus_go/hw12_13_14_15_calendar/internal/storage/rmq"
@@ -21,15 +22,16 @@ import (
 )
 
 type serviceProvider struct {
-	config          *config.Config
-	eventRepository storage.EventStorage
-	queueRepository storage.QueueStorage
-	eventService    service.EventService
-	queueService    service.QueueService
-	eventImpl       *eventApi.Implementation
-	dbClient        db.Client
-	rmqClient       *rmq.Client
-	txManager       db.TxManager
+	config              *config.Config
+	eventRepository     storage.EventStorage
+	queueRepository     storage.QueueStorage
+	eventService        service.EventService
+	queueService        service.QueueService
+	notificationService service.NotificationService
+	eventImpl           *eventApi.Implementation
+	dbClient            db.Client
+	rmqClient           *rmq.Client
+	txManager           db.TxManager
 }
 
 func newServiceProvider() *serviceProvider {
@@ -70,20 +72,15 @@ func (s *serviceProvider) DBClient(ctx context.Context) db.Client {
 	return s.dbClient
 }
 
-func (s *serviceProvider) RMQClient(ctx context.Context) *rmq.Client {
+func (s *serviceProvider) RMQClient() *rmq.Client {
 	if s.rmqClient == nil {
-		cl, err := rmq.NewClient(ctx, s.Config().Postgres.DSN)
+		amqpConnectionString := s.Config().RMQ.URI.String()
+		cl, err := rmq.NewClient(amqpConnectionString)
 		if err != nil {
 			log.Fatalf("failed to create db client: %v", err)
 		}
 
-		err = cl.DB().Ping(ctx)
-		if err != nil {
-			log.Fatalf("ping error: %s", err.Error())
-		}
-		closer.Add(cl.Close)
-
-		s.dbClient = cl
+		s.rmqClient = cl
 	}
 
 	return s.rmqClient
@@ -122,14 +119,14 @@ func (s *serviceProvider) EventRepository(ctx context.Context) storage.EventStor
 	return s.eventRepository
 }
 
-func (s *serviceProvider) QueueStorage(ctx context.Context) storage.QueueStorage {
+func (s *serviceProvider) QueueStorage() storage.QueueStorage {
 	if s.queueRepository != nil {
 		return s.queueRepository
 	}
 
-	s.queueRepository = rmqstorage.NewRepository(s.DBClient(ctx))
+	s.queueRepository = rmqstorage.NewRepository(s.RMQClient())
 
-	return s.eventRepository
+	return s.queueRepository
 }
 
 func (s *serviceProvider) EventService(ctx context.Context) service.EventService {
@@ -142,15 +139,27 @@ func (s *serviceProvider) EventService(ctx context.Context) service.EventService
 
 	return s.eventService
 }
+
 func (s *serviceProvider) QueueService(ctx context.Context) service.QueueService {
 	if s.queueService == nil {
 		s.queueService = queue.NewService(
-			s.EventRepository(ctx),
+			s.QueueStorage(),
 			s.EventService(ctx),
 		)
 	}
 
-	return s.eventService
+	return s.queueService
+}
+
+func (s *serviceProvider) NotificationService(ctx context.Context) service.NotificationService {
+	if s.notificationService == nil {
+		s.notificationService = notification.NewService(
+			s.QueueService(ctx),
+			s.EventService(ctx),
+		)
+	}
+
+	return s.notificationService
 }
 
 func (s *serviceProvider) EventImpl(ctx context.Context) *eventApi.Implementation {

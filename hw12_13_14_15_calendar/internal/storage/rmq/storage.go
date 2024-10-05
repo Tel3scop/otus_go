@@ -2,11 +2,10 @@ package rmq
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
+
 	"github.com/Tel3scop/helpers/logger"
 	"github.com/Tel3scop/otus_go/hw12_13_14_15_calendar/internal/client/rmq"
-	"github.com/Tel3scop/otus_go/hw12_13_14_15_calendar/internal/entity"
 	"github.com/Tel3scop/otus_go/hw12_13_14_15_calendar/internal/storage"
 	"go.uber.org/zap"
 )
@@ -29,33 +28,22 @@ func (r *queueRepo) CreateQueue(_ context.Context) error {
 	return r.client.CreateQueue(queueName)
 }
 
-// Enqueue помещает уведомление в очередь.
-func (r *queueRepo) Enqueue(_ context.Context, notification entity.Notification) error {
-	body, err := json.Marshal(notification)
-	if err != nil {
-		logger.Error("failed to encode notification", zap.Error(err), zap.Any("notification", notification))
-		return fmt.Errorf("failed to marshal notification: %v", err)
-	}
-	return r.client.Publish(queueName, body)
+// Enqueue помещает сообщение в очередь.
+func (r *queueRepo) Enqueue(_ context.Context, message []byte) error {
+	return r.client.Publish(queueName, message)
 }
 
-// Dequeue читает уведомление из очереди.
-func (r *queueRepo) Dequeue(ctx context.Context) (*entity.Notification, error) {
+// Dequeue читает сообщение из очереди.
+func (r *queueRepo) Dequeue(ctx context.Context) ([]byte, error) {
 	messages, err := r.client.Consume(queueName)
 	if err != nil {
 		logger.Error("failed to consume messages", zap.Error(err))
-		return nil, fmt.Errorf("failed to consume messages: %v", err)
+		return nil, fmt.Errorf("failed to consume messages: %w", err)
 	}
 
 	select {
 	case msg := <-messages:
-		var notification entity.Notification
-		err := json.Unmarshal(msg.Body, &notification)
-		if err != nil {
-			logger.Error("failed to unmarshal notification", zap.Error(err), zap.Any("notification", notification))
-			return nil, fmt.Errorf("failed to unmarshal notification: %v", err)
-		}
-		return &notification, nil
+		return msg.Body, nil
 	case <-ctx.Done():
 		return nil, ctx.Err()
 	}

@@ -2,6 +2,7 @@ package rmq
 
 import (
 	"fmt"
+
 	"github.com/rabbitmq/amqp091-go"
 )
 
@@ -15,12 +16,12 @@ type Client struct {
 func NewClient(url string) (*Client, error) {
 	conn, err := amqp091.Dial(url)
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect to RabbitMQ: %v", err)
+		return nil, fmt.Errorf("failed to connect to RabbitMQ: %w", err)
 	}
 
 	ch, err := conn.Channel()
 	if err != nil {
-		return nil, fmt.Errorf("failed to open a channel: %v", err)
+		return nil, fmt.Errorf("failed to open a channel: %w", err)
 	}
 
 	return &Client{conn: conn, ch: ch}, nil
@@ -37,7 +38,7 @@ func (c *Client) CreateQueue(queueName string) error {
 		nil,       // arguments
 	)
 	if err != nil {
-		return fmt.Errorf("failed to declare a queue: %v", err)
+		return fmt.Errorf("failed to declare a queue: %w", err)
 	}
 	return nil
 }
@@ -54,7 +55,7 @@ func (c *Client) Publish(queueName string, body []byte) error {
 			Body:        body,
 		})
 	if err != nil {
-		return fmt.Errorf("failed to publish a message: %v", err)
+		return fmt.Errorf("failed to publish a message: %w", err)
 	}
 	return nil
 }
@@ -71,7 +72,7 @@ func (c *Client) Consume(queueName string) (<-chan amqp091.Delivery, error) {
 		nil,       // args
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to register a consumer: %v", err)
+		return nil, fmt.Errorf("failed to register a consumer: %w", err)
 	}
 	return msgs, nil
 }
@@ -85,7 +86,7 @@ func (c *Client) DeleteQueue(queueName string) error {
 		false,     // no-wait
 	)
 	if err != nil {
-		return fmt.Errorf("failed to delete a queue: %v", err)
+		return fmt.Errorf("failed to delete a queue: %w", err)
 	}
 	return nil
 }

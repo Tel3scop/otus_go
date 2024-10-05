@@ -10,6 +10,7 @@ import (
 	"github.com/Tel3scop/otus_go/hw12_13_14_15_calendar/internal/entity"
 	"github.com/Tel3scop/otus_go/hw12_13_14_15_calendar/internal/storage"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 )
 
 const (
@@ -118,6 +119,31 @@ func (r *repo) Delete(ctx context.Context, eventID string) error {
 	return nil
 }
 
+// DeleteByDate удаление события по дате проведения.
+func (r *repo) DeleteByDate(ctx context.Context, date time.Time) error {
+	builder := sq.Delete(tableName).
+		Where(sq.Lt{columnDateTime: date}).
+		PlaceholderFormat(sq.Dollar)
+
+	query, args, err := builder.ToSql()
+	if err != nil {
+		logger.Error(err.Error())
+		return err
+	}
+
+	q := db.Query{
+		Name:     "event.DeleteByDate",
+		QueryRaw: query,
+	}
+
+	_, err = r.db.DB().ExecContext(ctx, q, args...)
+	if err != nil {
+		logger.Error(err.Error())
+	}
+
+	return nil
+}
+
 // List список событий на определенный период.
 func (r *repo) List(ctx context.Context, date time.Time, period entity.PeriodType) ([]entity.Event, error) {
 	var builder sq.SelectBuilder
@@ -134,7 +160,7 @@ func (r *repo) List(ctx context.Context, date time.Time, period entity.PeriodTyp
 			columnNotifyBefore,
 		).
 			From(tableName).
-			Where(sq.Expr("DATE_TRUNC('day', "+columnDateTime+") = ?", date)).
+			Where(sq.Expr(columnDateTime+"::date = ?", date.Format(time.DateOnly))).
 			PlaceholderFormat(sq.Dollar)
 	case entity.PeriodWeek:
 		startOfWeek := date.AddDate(0, 0, -int(date.Weekday()))
@@ -180,6 +206,7 @@ func (r *repo) List(ctx context.Context, date time.Time, period entity.PeriodTyp
 		Name:     "event.ListEvents",
 		QueryRaw: query,
 	}
+	logger.Info("run sql query:", zap.String("sql", q.QueryRaw))
 	var events []entity.Event
 	err = r.db.DB().ScanAllContext(ctx, &events, q, args...)
 	if err != nil {

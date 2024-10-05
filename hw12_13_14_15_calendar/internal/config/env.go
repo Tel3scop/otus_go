@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 
+	"github.com/rabbitmq/amqp091-go"
 	"gopkg.in/yaml.v3"
 )
 
@@ -27,6 +28,7 @@ type Config struct {
 	Environment string       `yaml:"environment" envDefault:"local"`
 	Database    DataBaseType `yaml:"database" envDefault:"memory"`
 	Postgres    Postgres     `yaml:"postgres"`
+	RMQ         RMQ          `yaml:"rmq"`
 	HTTP        HTTP         `yaml:"http"`
 	Swagger     Swagger      `yaml:"swagger"`
 	GRPC        GRPC         `yaml:"grpc"`
@@ -48,6 +50,16 @@ type Postgres struct {
 	SslMode            string `yaml:"sslMode" envDefault:"disable"`
 	DSN                string
 	MaxOpenConnections int `yaml:"maxOpenConnections" envDefault:"100"`
+}
+
+// RMQ конфиг подключения к RabbitMQ.
+type RMQ struct {
+	Host     string `yaml:"host" envDefault:"localhost"`
+	Port     int    `yaml:"port" envDefault:"5672"`
+	User     string `yaml:"user" envDefault:"root"`
+	Password string `yaml:"password" envDefault:"password"`
+	Scheme   string `yaml:"scheme" envDefault:"amqp"`
+	URI      amqp091.URI
 }
 
 // HTTP конфиг подключения к серверу.
@@ -99,6 +111,14 @@ func New(configFile string) (*Config, error) {
 	cfg.GRPC.Address = net.JoinHostPort(cfg.GRPC.Host, cfg.GRPC.Port)
 	cfg.HTTP.Address = net.JoinHostPort(cfg.HTTP.Host, cfg.HTTP.Port)
 	cfg.Swagger.Address = net.JoinHostPort(cfg.Swagger.Host, cfg.Swagger.Port)
+	cfg.RMQ.URI = amqp091.URI{
+		Host:     cfg.RMQ.Host,
+		Port:     cfg.RMQ.Port,
+		Username: cfg.RMQ.User,
+		Password: cfg.RMQ.Password,
+		Scheme:   cfg.RMQ.Scheme,
+	}
+
 	buildDSN(&cfg.Postgres)
 
 	return cfg, nil

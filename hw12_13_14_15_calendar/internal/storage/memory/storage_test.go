@@ -71,10 +71,13 @@ func TestInMemoryEventStorage_Delete(t *testing.T) {
 func TestInMemoryEventStorage_List(t *testing.T) {
 	repo := NewInMemoryEventStorage()
 	now := time.Now()
-
+	weekCheckDay := 1
+	if now.Weekday() == time.Saturday {
+		weekCheckDay = -1
+	}
 	events := []entity.Event{
 		{Title: "Event 1", DateTime: now},
-		{Title: "Event 2", DateTime: now.AddDate(0, 0, 1)},
+		{Title: "Event 2", DateTime: now.AddDate(0, 0, weekCheckDay)},
 		{Title: "Event 3", DateTime: now.AddDate(0, 0, 7)},
 	}
 

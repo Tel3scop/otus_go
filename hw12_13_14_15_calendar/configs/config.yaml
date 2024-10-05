@@ -20,6 +20,12 @@ grpc:
   host: "localhost"
   port: "10051"
   protocol: "tcp"
+rmq:
+  host: "localhost"
+  port: 5672
+  user: rmquser
+  password: password
+  scheme: amqp
 log:
   fileName: "logs/app.log"
   level: "info"

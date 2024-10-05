@@ -18,13 +18,13 @@ func main() {
 	ctx := context.Background()
 	flag.Parse()
 
-	scheduler, err := app.NewScheduler(ctx, configFile)
+	sender, err := app.NewSender(ctx, configFile)
 	if err != nil {
-		log.Fatalf("failed to init scheduler: %v", err)
+		log.Fatalf("failed to init sender: %s", err.Error())
 	}
 
-	err = scheduler.Run()
+	err = sender.Run()
 	if err != nil {
-		log.Fatalf("failed to run scheduler: %v", err)
+		log.Fatalf("failed to run sender: %s", err.Error())
 	}
 }

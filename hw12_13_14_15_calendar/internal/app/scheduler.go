@@ -2,15 +2,16 @@ package app
 
 import (
 	"context"
-	"github.com/Tel3scop/helpers/logger"
-	"github.com/Tel3scop/otus_go/hw12_13_14_15_calendar/internal/closer"
-	"github.com/Tel3scop/otus_go/hw12_13_14_15_calendar/internal/config"
-	"github.com/Tel3scop/otus_go/hw12_13_14_15_calendar/internal/entity"
-	"github.com/go-co-op/gocron/v2"
-	"go.uber.org/zap"
+	"fmt"
 	"log"
 	"sync"
 	"time"
+
+	"github.com/Tel3scop/helpers/logger"
+	"github.com/Tel3scop/otus_go/hw12_13_14_15_calendar/internal/closer"
+	"github.com/Tel3scop/otus_go/hw12_13_14_15_calendar/internal/config"
+	"github.com/go-co-op/gocron/v2"
+	"go.uber.org/zap"
 )
 
 // Scheduler структура планировщика с сервис-провайдером и кроном.
@@ -38,12 +39,14 @@ func (s *Scheduler) Run() error {
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 
+	err := s.serviceProvider.QueueService(context.Background()).CreateQueue(context.Background())
+	if err != nil {
+		return fmt.Errorf("failed to create queue: %w", err)
+	}
+
 	go func() {
 		defer wg.Done()
-		err := s.runCron()
-		if err != nil {
-			log.Fatal(err)
-		}
+		err = s.runCron()
 	}()
 
 	wg.Wait()
@@ -100,25 +103,41 @@ func (s *Scheduler) runCron() error {
 	ctx := context.Background()
 	cron, err := gocron.NewScheduler()
 	if err != nil {
-		log.Fatalf("cannot start cron: %s", err)
+		return fmt.Errorf("failed to create scheduler: %w", err)
 	}
 
+	s.notifyOnEventJob(ctx, cron)
+	s.clearOldEvents(ctx, cron)
+
+	cron.Start()
+
+	time.Sleep(time.Minute)
+
+	err = cron.Shutdown()
+	if err != nil {
+		logger.Error("cannot shutdown cron: %s", zap.Error(err))
+	}
+
+	return nil
+}
+
+func (s *Scheduler) notifyOnEventJob(ctx context.Context, cron gocron.Scheduler) {
 	j, err := cron.NewJob(
 		gocron.DurationJob(
-			5*time.Minute,
+			20*time.Second,
 		),
+		// gocron.DurationJob(
+		//	5*time.Minute,
+		// ),
 		gocron.NewTask(
-			func(a string, b int) {
+			func() {
+				logger.Info("try")
 				date := time.Now()
-				list, err := s.serviceProvider.EventService(ctx).List(ctx, date, entity.PeriodDay)
+				err := s.serviceProvider.NotificationService(ctx).NotifyOnEvent(ctx)
 				if err != nil {
-					logger.Error("cannot get list events", zap.Time("date", date), zap.Error(err))
+					logger.Error("cannot notifiy events", zap.Time("date", date), zap.Error(err))
 				}
-
-				_ = list
 			},
-			"hello",
-			1,
 		),
 	)
 	if err != nil {
@@ -126,17 +145,29 @@ func (s *Scheduler) runCron() error {
 	}
 
 	logger.Info("job created", zap.String("ID", j.ID().String()))
+}
 
-	cron.Start()
-
-	select {
-	case <-time.After(time.Minute):
-	}
-
-	err = cron.Shutdown()
+func (s *Scheduler) clearOldEvents(ctx context.Context, cron gocron.Scheduler) {
+	j, err := cron.NewJob(
+		gocron.DailyJob(
+			1,
+			gocron.NewAtTimes(gocron.NewAtTime(23, 0, 0)),
+		),
+		gocron.NewTask(
+			func() {
+				err := s.serviceProvider.EventService(ctx).DeleteByDate(
+					ctx,
+					time.Now().AddDate(-1, 0, 0),
+				)
+				if err != nil {
+					logger.Error("cannot clear old events", zap.Error(err))
+				}
+			},
+		),
+	)
 	if err != nil {
-		log.Fatalf("cannot shutdown cron: %s", err)
+		log.Fatalf("cannot start job: %s", err)
 	}
 
-	return nil
+	logger.Info("job created", zap.String("ID", j.ID().String()))
 }

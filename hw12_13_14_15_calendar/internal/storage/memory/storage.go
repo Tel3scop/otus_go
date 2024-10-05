@@ -62,6 +62,19 @@ func (s *InMemEventStorage) Delete(_ context.Context, eventID string) error {
 	return nil
 }
 
+// DeleteByDate удаление событий из хранилища по дате.
+func (s *InMemEventStorage) DeleteByDate(_ context.Context, date time.Time) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for _, event := range s.events {
+		if event.DateTime.Before(date) {
+			delete(s.events, event.ID)
+		}
+	}
+
+	return nil
+}
+
 // List список событий на определенный период.
 func (s *InMemEventStorage) List(_ context.Context, date time.Time, period entity.PeriodType) ([]entity.Event, error) {
 	s.mu.RLock()
