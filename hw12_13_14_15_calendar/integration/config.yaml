@@ -2,7 +2,7 @@ debugMode: false
 environment: local
 database: postgres
 postgres:
-  host: db
+  host: db-test
   port: 5432
   user: user
   password: password
@@ -17,11 +17,11 @@ swagger:
   port: 8081
   timeout: 5
 grpc:
-  host: localhost
+  host: 0.0.0.0
   port: 10051
   protocol: tcp
 rmq:
-  host: rmq
+  host: rmq-test
   port: 5672
   user: rmquser
   password: password

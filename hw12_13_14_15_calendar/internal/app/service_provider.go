@@ -77,7 +77,7 @@ func (s *serviceProvider) RMQClient() *rmq.Client {
 		amqpConnectionString := s.Config().RMQ.URI.String()
 		cl, err := rmq.NewClient(amqpConnectionString)
 		if err != nil {
-			log.Fatalf("failed to create db client: %v", err)
+			log.Fatalf("failed to create rmq client: %v", err)
 		}
 
 		s.rmqClient = cl

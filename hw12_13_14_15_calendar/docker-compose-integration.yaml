@@ -1,11 +1,11 @@
 services:
 
   app:
-    container_name: app
+    container_name: app-test
     build:
-      dockerfile: Dockerfile
+      dockerfile: Test.Dockerfile
     env_file:
-      - ".env"
+      - "integration/.env"
     ports:
       - "${HTTP_PORT}:${HTTP_PORT}"
       - "${GRPC_PORT}:${GRPC_PORT}"
@@ -15,71 +15,71 @@ services:
       db:
         condition: service_healthy
     networks:
-      - calendar-network
+      - calendar-network-test
 
   scheduler:
-    container_name: scheduler-calendar
+    container_name: scheduler-test
     build:
       dockerfile: Scheduler.Dockerfile
     env_file:
-      - ".env"
+      - "integration/.env"
     depends_on:
       rmq:
         condition: service_healthy
       db:
         condition: service_healthy
     networks:
-      - calendar-network
+      - calendar-network-test
 
   sender:
-    container_name: sender
+    container_name: sender-test
     build:
       dockerfile: Sender.Dockerfile
     env_file:
-      - ".env"
+      - "integration/.env"
     depends_on:
       rmq:
         condition: service_healthy
       db:
         condition: service_healthy
     networks:
-      - calendar-network
+      - calendar-network-test
 
   app-migrator:
-    container_name: app-migrator
+    container_name: app-migrator-test
     build:
       dockerfile: migration.Dockerfile
     env_file:
-      - "migration.env"
+      - "integration/migration.env"
     depends_on:
       db:
         condition: service_healthy
     restart: on-failure
     networks:
-      - calendar-network
+      - calendar-network-test
 
   db:
     image: postgres:15-alpine3.17
-    container_name: db
+    container_name: db-test
     env_file:
-      - ".env"
+      - "integration/.env"
     ports:
       - "5432:${POSTGRES_PORT}"
     volumes:
-      - postgres_volume:/var/lib/postgresql/data
+      - postgres_volume_test:/var/lib/postgresql/data
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
-      - calendar-network
+      - calendar-network-test
 
   rmq:
     image: rabbitmq:4.0.2-management
-    container_name: rmq
+    container_name: rmq-test
     env_file:
-      - ".env"
+      - "integration/.env"
     restart: always
     environment:
       - RABBITMQ_DEFAULT_USER=${RMQ_USER}
@@ -88,19 +88,19 @@ services:
     ports:
       - "${RMQ_PORT}:${RMQ_PORT}"
     volumes:
-      - rmq_volume:/var/lib/rabbitmq
+      - rmq_volume_test:/var/lib/rabbitmq
     healthcheck:
       test: [ "CMD-SHELL", "rabbitmqctl await_startup" ]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
-      - calendar-network
+      - calendar-network-test
 
 volumes:
-  postgres_volume:
-  rmq_volume:
+  postgres_volume_test:
+  rmq_volume_test:
 
 networks:
-  calendar-network:
+  calendar-network-test:
     driver: bridge

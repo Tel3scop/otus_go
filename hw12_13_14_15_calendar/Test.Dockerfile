@@ -28,7 +28,7 @@ COPY --from=builder /app/bin/server .
 
 # Копируем конфигурационный файл
 ENV CONFIG_FILE /etc/calendar/config.yaml
-COPY ./configs/config.yaml ${CONFIG_FILE}
+COPY ./integration/config.yaml ${CONFIG_FILE}
 
 # Устанавливаем метки
 LABEL ORGANIZATION="OTUS Online Education"

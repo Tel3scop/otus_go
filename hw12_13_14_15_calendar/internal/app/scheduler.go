@@ -110,28 +110,30 @@ func (s *Scheduler) runCron() error {
 	s.clearOldEvents(ctx, cron)
 
 	cron.Start()
+	for {
+		select {
+		case <-ctx.Done():
+			logger.Info("Context done, stopping cron")
+			err = cron.Shutdown()
+			if err != nil {
+				logger.Error("cannot shutdown cron: %s", zap.Error(err))
+				return err
+			}
+			return nil
 
-	time.Sleep(time.Minute)
-
-	err = cron.Shutdown()
-	if err != nil {
-		logger.Error("cannot shutdown cron: %s", zap.Error(err))
+		default:
+			time.Sleep(1 * time.Second)
+		}
 	}
-
-	return nil
 }
 
 func (s *Scheduler) notifyOnEventJob(ctx context.Context, cron gocron.Scheduler) {
 	j, err := cron.NewJob(
 		gocron.DurationJob(
-			20*time.Second,
+			5*time.Minute,
 		),
-		// gocron.DurationJob(
-		//	5*time.Minute,
-		// ),
 		gocron.NewTask(
 			func() {
-				logger.Info("try")
 				date := time.Now()
 				err := s.serviceProvider.NotificationService(ctx).NotifyOnEvent(ctx)
 				if err != nil {

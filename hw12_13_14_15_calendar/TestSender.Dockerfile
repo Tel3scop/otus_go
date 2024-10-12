@@ -15,7 +15,7 @@ COPY . .
 RUN apk add --no-cache build-base
 
 # Собираем приложение
-RUN go build -o ./bin/server ./cmd/calendar/main.go
+RUN go build -o ./bin/server ./cmd/calendar/sender/main.go
 
 # На выходе тонкий образ
 FROM alpine:latest
@@ -28,7 +28,7 @@ COPY --from=builder /app/bin/server .
 
 # Копируем конфигурационный файл
 ENV CONFIG_FILE /etc/calendar/config.yaml
-COPY ./configs/config.yaml ${CONFIG_FILE}
+COPY ./integration/config.yaml ${CONFIG_FILE}
 
 # Устанавливаем метки
 LABEL ORGANIZATION="OTUS Online Education"

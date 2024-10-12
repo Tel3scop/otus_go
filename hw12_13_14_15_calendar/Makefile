@@ -53,7 +53,7 @@ docker-build: ## build for CI/CD
 
 .PHONY: run
 run: ## Run the project using docker-compose
-	docker-compose up -d
+	docker-compose -f docker-compose.yaml up -d --build
 
 .PHONY: install-deps
 install-deps: ## install dependencies
@@ -96,7 +96,6 @@ generate: ## generate handlers
 	make generate-event-api
 	statik -src=pkg/swagger/ -include='*.css,*.html,*.js,*.json,*.png'
 
-
 .PHONY: generate-event-api
 generate-event-api:  ## generate handlers for /api/event
 	mkdir -p pkg/event_v1
@@ -110,3 +109,7 @@ generate-event-api:  ## generate handlers for /api/event
 	--openapiv2_out=allow_merge=true,merge_file_name=api_event:pkg/swagger \
 	--plugin=protoc-gen-openapiv2=bin/protoc-gen-openapiv2 \
 	api/EventService.proto
+
+.PHONY: integration-tests
+integration-tests: ## run integration tests
+	sh run_integration_test.sh

@@ -15,7 +15,7 @@ COPY . .
 RUN apk add --no-cache build-base
 
 # Собираем приложение
-RUN go build -o ./bin/server ./cmd/calendar/main.go
+RUN go build -o ./bin/server ./cmd/calendar/sender/main.go
 
 # На выходе тонкий образ
 FROM alpine:latest
