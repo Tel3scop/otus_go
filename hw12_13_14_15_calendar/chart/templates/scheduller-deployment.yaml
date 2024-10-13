@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-scheduler
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-scheduler
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-scheduler
+    spec:
+      initContainers:
+        - name: wait-for-db
+          image: busybox
+          command: [ 'sh', '-c', 'until nc -z db 5432; do echo waiting for db; sleep 2; done;' ]
+        - name: wait-for-rmq
+          image: busybox
+          command: [ 'sh', '-c', 'until nc -z rmq 5672; do echo waiting for rmq; sleep 2; done;' ]
+      containers:
+        - name: scheduler
+          image: {{ .Values.image.repository }}/calendar-scheduler:{{ .Values.image.tag }}
+          envFrom:
+            - configMapRef:
+                name: {{ .Release.Name }}-scheduler-env
+            - secretRef:
+                name: {{ .Release.Name }}-scheduler-secret
+          ports:
+            - containerPort: {{ .Values.service.port }}

@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-sender-env
+data:
+  POSTGRES_DB: "{{ .Values.sender.env.POSTGRES_DB }}"
+  POSTGRES_PORT: "{{ .Values.sender.env.POSTGRES_PORT }}"
+  POSTGRES_USER: "{{ .Values.sender.env.POSTGRES_USER }}"
+  RMQ_USER: "{{ .Values.sender.env.RMQ_USER }}"
+  RMQ_PORT: "{{ .Values.sender.env.RMQ_PORT }}"
