@@ -4,13 +4,14 @@ package integration
 
 import (
 	"context"
-	"github.com/google/uuid"
-	"google.golang.org/protobuf/types/known/durationpb"
-	"google.golang.org/protobuf/types/known/timestamppb"
 	"math/rand"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/google/uuid"
+	"google.golang.org/protobuf/types/known/durationpb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/Tel3scop/otus_go/hw12_13_14_15_calendar/pkg/event_v1"
 	"github.com/stretchr/testify/suite"
