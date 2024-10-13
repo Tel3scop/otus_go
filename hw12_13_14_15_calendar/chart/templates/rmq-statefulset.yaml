@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Release.Name }}-rmq
+spec:
+  serviceName: {{ .Release.Name }}-rmq
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-rmq
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-rmq
+    spec:
+      containers:
+        - name: rmq
+          image: {{ .Values.rmq.image }}:{{ .Values.rmq.tag }}
+          envFrom:
+            - configMapRef:
+                name: {{ .Release.Name }}-rmq-config
+            - secretRef:
+                name: {{ .Release.Name }}-rmq-secret
+          ports:
+            - containerPort: {{ .Values.rmq.port }}
+          volumeMounts:
+            - name: rmq-storage
+              mountPath: /var/lib/rabbitmq
+  volumeClaimTemplates:
+    - metadata:
+        name: rmq-storage
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: {{ .Values.rmq.storage }}

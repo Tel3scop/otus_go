@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: rmq
+spec:
+  selector:
+    app: calendar-rmq
+  ports:
+    - name: amqp
+      port: 5672
+      targetPort: 5672
