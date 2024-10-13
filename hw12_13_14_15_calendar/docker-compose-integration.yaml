@@ -1,0 +1,106 @@
+services:
+
+  app:
+    container_name: app-test
+    build:
+      dockerfile: Test.Dockerfile
+    env_file:
+      - "integration/.env"
+    ports:
+      - "${HTTP_PORT}:${HTTP_PORT}"
+      - "${GRPC_PORT}:${GRPC_PORT}"
+    depends_on:
+      rmq:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    networks:
+      - calendar-network-test
+
+  scheduler:
+    container_name: scheduler-test
+    build:
+      dockerfile: Scheduler.Dockerfile
+    env_file:
+      - "integration/.env"
+    depends_on:
+      rmq:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    networks:
+      - calendar-network-test
+
+  sender:
+    container_name: sender-test
+    build:
+      dockerfile: Sender.Dockerfile
+    env_file:
+      - "integration/.env"
+    depends_on:
+      rmq:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    networks:
+      - calendar-network-test
+
+  app-migrator:
+    container_name: app-migrator-test
+    build:
+      dockerfile: migration.Dockerfile
+    env_file:
+      - "integration/migration.env"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: on-failure
+    networks:
+      - calendar-network-test
+
+  db:
+    image: postgres:15-alpine3.17
+    container_name: db-test
+    env_file:
+      - "integration/.env"
+    ports:
+      - "5432:${POSTGRES_PORT}"
+    volumes:
+      - postgres_volume_test:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - calendar-network-test
+
+  rmq:
+    image: rabbitmq:4.0.2-management
+    container_name: rmq-test
+    env_file:
+      - "integration/.env"
+    restart: always
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RMQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${RMQ_PWD}
+      - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=-rabbit log_levels [{connection,error},{default,error}] disk_free_limit ${RMQ_DISK_FREE}
+    ports:
+      - "${RMQ_PORT}:${RMQ_PORT}"
+    volumes:
+      - rmq_volume_test:/var/lib/rabbitmq
+    healthcheck:
+      test: [ "CMD-SHELL", "rabbitmqctl await_startup" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - calendar-network-test
+
+volumes:
+  postgres_volume_test:
+  rmq_volume_test:
+
+networks:
+  calendar-network-test:
+    driver: bridge

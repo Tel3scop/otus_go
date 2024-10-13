@@ -1,0 +1,106 @@
+services:
+
+  app:
+    container_name: app
+    build:
+      dockerfile: Dockerfile
+    env_file:
+      - ".env"
+    ports:
+      - "${HTTP_PORT}:${HTTP_PORT}"
+      - "${GRPC_PORT}:${GRPC_PORT}"
+    depends_on:
+      rmq:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    networks:
+      - calendar-network
+
+  scheduler:
+    container_name: scheduler-calendar
+    build:
+      dockerfile: Scheduler.Dockerfile
+    env_file:
+      - ".env"
+    depends_on:
+      rmq:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    networks:
+      - calendar-network
+
+  sender:
+    container_name: sender
+    build:
+      dockerfile: Sender.Dockerfile
+    env_file:
+      - ".env"
+    depends_on:
+      rmq:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    networks:
+      - calendar-network
+
+  app-migrator:
+    container_name: app-migrator
+    build:
+      dockerfile: migration.Dockerfile
+    env_file:
+      - "migration.env"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: on-failure
+    networks:
+      - calendar-network
+
+  db:
+    image: postgres:15-alpine3.17
+    container_name: db
+    env_file:
+      - ".env"
+    ports:
+      - "5432:${POSTGRES_PORT}"
+    volumes:
+      - postgres_volume:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - calendar-network
+
+  rmq:
+    image: rabbitmq:4.0.2-management
+    container_name: rmq
+    env_file:
+      - ".env"
+    restart: always
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RMQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${RMQ_PWD}
+      - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=-rabbit log_levels [{connection,error},{default,error}] disk_free_limit ${RMQ_DISK_FREE}
+    ports:
+      - "${RMQ_PORT}:${RMQ_PORT}"
+    volumes:
+      - rmq_volume:/var/lib/rabbitmq
+    healthcheck:
+      test: [ "CMD-SHELL", "rabbitmqctl await_startup" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - calendar-network
+
+volumes:
+  postgres_volume:
+  rmq_volume:
+
+networks:
+  calendar-network:
+    driver: bridge

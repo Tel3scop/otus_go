@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-migrator-env
+data:
+  POSTGRES_HOST: "{{ .Values.migrator.env.POSTGRES_HOST }}"
+  POSTGRES_DB: "{{ .Values.migrator.env.POSTGRES_DB }}"
+  POSTGRES_PORT: "{{ .Values.migrator.env.POSTGRES_PORT }}"
+  POSTGRES_USER: "{{ .Values.migrator.env.POSTGRES_USER }}"
+  POSTGRES_SSLMODE: "{{ .Values.migrator.env.POSTGRES_SSLMODE }}"
+  POSTGRES_MAX_OPEN_CONNS: "{{ .Values.migrator.env.POSTGRES_MAX_OPEN_CONNS }}"
+  MIGRATION_DIR: "{{ .Values.migrator.env.MIGRATION_DIR }}"

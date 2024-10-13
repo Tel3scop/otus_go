@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-migrator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-migrator
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-migrator
+    spec:
+      initContainers:
+        - name: wait-for-db
+          image: busybox
+          command: [ 'sh', '-c', 'until nc -z db 5432; do echo waiting for db; sleep 2; done;' ]
+      restartPolicy: Always
+      containers:
+        - name: migrator
+          image: {{ .Values.image.repository }}/calendar-migrator:{{ .Values.image.tag }}
+          envFrom:
+            - configMapRef:
+                name: {{ .Release.Name }}-migrator-env
+            - secretRef:
+                name: {{ .Release.Name }}-migrator-secret
+      dnsConfig:
+        nameservers:
+          - 10.43.0.10
+        searches:
+          - default.svc.cluster.local
+          - svc.cluster.local
+          - cluster.local

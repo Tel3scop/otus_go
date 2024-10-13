@@ -1,0 +1,71 @@
+replicaCount: 1
+
+image:
+  repository: tel3scop
+  tag: latest
+
+service:
+  type: ClusterIP
+  port: 8080
+
+db:
+  image: postgres
+  tag: 17.0-alpine
+  port: 5432
+  storage: 1Gi
+  user: user
+  password: password
+  db: calendar
+
+rmq:
+  image: rabbitmq
+  tag: 4.0.2-management
+  port: 5672
+  storage: 1Gi
+  user: rmquser
+  password: password
+  disk_free: 21474836480
+
+app:
+  env:
+    HTTP_PORT: "8888"
+    GRPC_PORT: "10051"
+    POSTGRES_HOST: "db"
+    POSTGRES_DB: "calendar"
+    POSTGRES_PORT: "5432"
+    POSTGRES_USER: "user"
+    POSTGRES_PASSWORD: "password"
+    RMQ_USER: "rmquser"
+    RMQ_PWD: "password"
+    RMQ_PORT: "5672"
+
+scheduler:
+  env:
+    POSTGRES_DB: "calendar"
+    POSTGRES_PORT: "5432"
+    POSTGRES_USER: "user"
+    POSTGRES_PASSWORD: "password"
+    RMQ_USER: "rmquser"
+    RMQ_PWD: "password"
+    RMQ_PORT: "5672"
+
+sender:
+  env:
+    POSTGRES_DB: "calendar"
+    POSTGRES_PORT: "5432"
+    POSTGRES_USER: "user"
+    POSTGRES_PASSWORD: "password"
+    RMQ_USER: "rmquser"
+    RMQ_PWD: "password"
+    RMQ_PORT: "5672"
+
+migrator:
+  env:
+    POSTGRES_HOST: "db"
+    POSTGRES_DB: "calendar"
+    POSTGRES_PORT: "5432"
+    POSTGRES_USER: "user"
+    POSTGRES_PASSWORD: "password"
+    POSTGRES_SSLMODE: "disable"
+    POSTGRES_MAX_OPEN_CONNS: "100"
+    MIGRATION_DIR: "./migrations"

@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-scheduler-env
+data:
+  POSTGRES_DB: "{{ .Values.scheduler.env.POSTGRES_DB }}"
+  POSTGRES_PORT: "{{ .Values.scheduler.env.POSTGRES_PORT }}"
+  POSTGRES_USER: "{{ .Values.scheduler.env.POSTGRES_USER }}"
+  RMQ_USER: "{{ .Values.scheduler.env.RMQ_USER }}"
+  RMQ_PORT: "{{ .Values.scheduler.env.RMQ_PORT }}"
